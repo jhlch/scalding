@@ -70,7 +70,6 @@ object ScaldingBuild extends Build {
           jar => excludes(jar.data.getName)
         }
     },
-
     // Some of these files have duplicates, let's ignore:
     mergeStrategy in assembly <<= (mergeStrategy in assembly) {
       (old) => {
@@ -82,6 +81,7 @@ object ScaldingBuild extends Build {
         case x => old(x)
       }
     },
+    test in assembly :=  {},
 
     pomExtra := (
       <url>https://github.com/twitter/scalding</url>
@@ -129,7 +129,8 @@ object ScaldingBuild extends Build {
     scaldingDate,
     scaldingCore,
     scaldingCommons,
-    scaldingAvro
+    scaldingAvro,
+    scaldingRepl
   )
 
   /**
@@ -230,6 +231,21 @@ object ScaldingBuild extends Build {
       "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
       "org.scala-tools.testing" %% "specs" % "1.6.9" % "test"
     )
+  ).dependsOn(scaldingCore)
+
+  lazy val scaldingRepl = Project(
+    id = "scalding-repl",
+    base = file("scalding-repl"),
+    settings = sharedSettings
+  ).settings(
+    name := "scalding-repl",
+    previousArtifact := None,
+    libraryDependencies <++= (scalaVersion) { scalaVersion => Seq(
+      "org.scala-lang" % "jline" % scalaVersion,
+      "org.scala-lang" % "scala-compiler" % scalaVersion,
+      "org.apache.hadoop" % "hadoop-core" % "0.20.2" % "provided"
+    )
+    }
   ).dependsOn(scaldingCore)
 
 }
