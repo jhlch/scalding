@@ -134,5 +134,9 @@ object ReplImplicits extends FieldConversions {
    * @param pipe to convert to a ShellPipe.
    * @return a ShellPipe wrapping the specified Pipe.
    */
-  implicit def pipeToShellPipe(pipe: Pipe): ShellPipe = new ShellPipe(pipe)
+  implicit def pipeToShellPipe(pipe: Pipe): ShellObj[Pipe] = new ShellObj(pipe)
+  implicit def typedPipeToShellPipe[T](pipe: TypedPipe[T]): ShellObj[TypedPipe[T]] =
+    new ShellObj(pipe)
+  implicit def keyedListToShellPipe[K,V](pipe: KeyedList[K,V]): ShellObj[KeyedList[K,V]] =
+    new ShellObj(pipe)
 }

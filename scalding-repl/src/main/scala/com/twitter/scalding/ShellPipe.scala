@@ -23,22 +23,21 @@ import cascading.pipe.Pipe
  *
  * @param pipe to wrap.
  */
-class ShellPipe(private val pipe: Pipe) {
+class ShellObj[T](obj: T) {
   /**
    * Gets a job that can be used to run the data pipeline.
    *
    * @param args that should be used to construct the job.
    * @return a job that can be used to run the data pipeline.
    */
-  private[scalding] def getJob(args: Args, mode: Mode): Job = new Job(args) {
-    // The job's constructor should evaluate to the pipe to run.
-    pipe
-
+  private[scalding] def getJob(args: Args, inmode: Mode): Job = new Job(args) {
     /**
      *  The flow definition used by this job, which should be the same as that used by the user
      *  when creating their pipe.
      */
-    override implicit val flowDef = ReplImplicits.flowDef
+    override val flowDef = ReplImplicits.flowDef
+
+    override def mode = inmode
 
     /**
      * Obtains a configuration used when running the job.
@@ -100,7 +99,14 @@ class ShellPipe(private val pipe: Pipe) {
    */
   def run() {
     val args = new Args(Map())
-    getJob(Mode.putMode(ReplImplicits.mode, args), ReplImplicits.mode).run
+    getJob(args, ReplImplicits.mode).run
+  }
+
+  def toList[R](implicit ev: T <:< TypedPipe[R]): List[R] = {
+    import ReplImplicits._
+    ev(obj).toPipe("el").write(Tsv("item"))
+    run()
+    Tsv("item").readAtSubmitter[R].toList
   }
 }
 
